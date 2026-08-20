@@ -1,0 +1,45 @@
+name: Sync Fork with Upstream
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        branch:
+          - main
+          - automation/issues-20260601-101825
+          - automation/issues-20260601-141910
+          - automation/issues-773
+          - bot/sync-pro-submodule
+          - chore/pr-678-governance-review-fixes
+          - cursor/development-environment-setup-822a
+          - docs/epic-pro-ux-errors-specs
+          - feat/core-super-update-epic
+          - fix/bugfix-517-475-472-469-resilience-cluster
+          - fix/bugfix-527-532-authority-divzero
+          - fix/greenfield-activation-guard
+          - fix/npm-publish-legacy-job-always-skip-propagation
+          - fix/pro-package-dual-scope-resolution
+          - oalanicolas-patch-1
+          - pedro-aios
+          - release/5.0.5
+          - security/sha-pin-actions
+    steps:
+      - name: Sync branch with upstream (merge-upstream API)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Syncing branch: ${{ matrix.branch }}"
+          gh api "repos/${{ github.repository }}/merge-upstream" \
+            -f branch="${{ matrix.branch }}" \
+            && echo "OK: ${{ matrix.branch }} synced" \
+            || echo "WARN: could not fast-forward ${{ matrix.branch }} (may need manual merge due to conflicts)"
