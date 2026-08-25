@@ -59,11 +59,17 @@ jobs:
         env:
           INPUT_SHA: ${{ github.event.inputs.target_sha }}
           PRO_REPO_URL: ${{ steps.pro-remote.outputs.auth_url }}
+          PRO_SUBMODULE_TOKEN: ${{ secrets.PRO_SUBMODULE_TOKEN }}
         run: |
+          if [ -z "$PRO_SUBMODULE_TOKEN" ] && [ -z "$INPUT_SHA" ]; then
+            echo "::warning::PRO_SUBMODULE_TOKEN is not set and no target_sha provided. Skipping sync."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           TARGET_SHA="$INPUT_SHA"
           if [ -z "$TARGET_SHA" ]; then
-            TARGET_SHA=$(git -c http.https://github.com/.extraheader= \
-              ls-remote "$PRO_REPO_URL" refs/heads/main | awk '{print $1}')
+            TARGET_SHA=$(git ls-remote "$PRO_REPO_URL" refs/heads/main | awk '{print $1}')
           fi
 
           CURRENT_SHA=$(git ls-tree HEAD pro | awk '{print $3}')
